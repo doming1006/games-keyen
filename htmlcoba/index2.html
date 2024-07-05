@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Balapan Mobil</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 0;
+        }
+        #gameArea {
+            width: 100%;
+            height: 500px;
+            position: relative;
+            overflow: hidden;
+            background-color: #333;
+            margin-top: 10px;
+        }
+        .car {
+            width: 50px;
+            height: 100px;
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        .obstacle {
+            width: 50px;
+            height: 100px;
+            position: absolute;
+            top: 0;
+        }
+        #menu {
+            display: flex;
+            justify-content: center;
+            margin-top: 10px;
+        }
+        #menu button {
+            margin: 5px;
+            padding: 10px 20px;
+            border: none;
+            background-color: #333;
+            color: #fff;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Game Balapan Mobil</h1>
+    <div id="menu">
+        <button onclick="startGame()">Start</button>
+        <button onclick="pauseGame()">Pause</button>
+        <button onclick="resetGame()">Reset</button>
+    </div>
+    <div id="gameArea">
+        <img id="playerCar" class="car" src="images/mobil.png.png " alt="Mobil">
+    </div>
+    <script>
+        let gameArea = document.getElementById('gameArea');
+        let playerCar = document.getElementById('playerCar');
+        let gameInterval;
+        let speed = 5;
+        let obstacles = [];
+        let isPaused = false;
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft') {
+                let left = parseInt(window.getComputedStyle(playerCar).getPropertyValue('left'));
+                if (left > 0) {
+                    playerCar.style.left = left - 10 + 'px';
+                }
+            }
+            if (e.key === 'ArrowRight') {
+                let left = parseInt(window.getComputedStyle(playerCar).getPropertyValue('left'));
+                if (left < gameArea.offsetWidth - playerCar.offsetWidth) {
+                    playerCar.style.left = left + 10 + 'px';
+                }
+            }
+            if (e.key === 'Escape') {
+                togglePause();
+            }
+        });
+
+        function createObstacle() {
+            let obstacle = document.createElement('img');
+            obstacle.classList.add('obstacle');
+            obstacle.src = 'images/rintangan.png';
+            obstacle.style.left = Math.floor(Math.random() * (gameArea.offsetWidth - 50)) + 'px';
+            gameArea.appendChild(obstacle);
+            obstacles.push(obstacle);
+        }
+
+        function moveObstacles() {
+            for (let i = 0; i < obstacles.length; i++) {
+                let obstacle = obstacles[i];
+                let top = parseInt(window.getComputedStyle(obstacle).getPropertyValue('top'));
+                if (top >= gameArea.offsetHeight) {
+                    obstacle.remove();
+                    obstacles.splice(i, 1);
+                    i--;
+                } else {
+                    obstacle.style.top = top + speed + 'px';
+                }
+            }
+        }
+
+        function checkCollision() {
+            for (let i = 0; i < obstacles.length; i++) {
+                let obstacle = obstacles[i];
+                let obstacleRect = obstacle.getBoundingClientRect();
+                let playerRect = playerCar.getBoundingClientRect();
+                if (
+                    playerRect.left < obstacleRect.left + obstacleRect.width &&
+                    playerRect.left + playerRect.width > obstacleRect.left &&
+                    playerRect.top < obstacleRect.top + obstacleRect.height &&
+                    playerRect.top + playerRect.height > obstacleRect.top
+                ) {
+                    gameOver();
+                }
+            }
+        }
+
+        function gameLoop() {
+            if (!isPaused) {
+                moveObstacles();
+                checkCollision();
+            }
+        }
+
+        function startGame() {
+            resetGame();
+            isPaused = false;
+            gameInterval = setInterval(() => {
+                gameLoop();
+                if (Math.random() < 0.05) {
+                    createObstacle();
+                }
+            }, 50);
+        }
+
+        function pauseGame() {
+            isPaused = true;
+        }
+
+        function resetGame() {
+            clearInterval(gameInterval);
+            isPaused = true;
+            obstacles.forEach(obstacle => obstacle.remove());
+            obstacles = [];
+            playerCar.style.left = '50%';
+            playerCar.style.bottom = '10px';
+        }
+
+        function gameOver() {
+            clearInterval(gameInterval);
+            alert('Game Over!');
+            resetGame();
+        }
+
+        function togglePause() {
+            if (isPaused) {
+                isPaused = false;
+                gameInterval = setInterval(() => {
+                    gameLoop();
+                    if (Math.random() < 0.05) {
+                        createObstacle();
+                    }
+                }, 50);
+            } else {
+                isPaused = true;
+                clearInterval(gameInterval);
+            }
+        }
+
+        // Menampilkan menu saat pertama kali
+        pauseGame();
+    </script>
+</body>
+</html>
